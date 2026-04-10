@@ -10,4 +10,4 @@ WORKDIR /app/src
 
 EXPOSE 50060
 
-CMD ["python", "monolith.py"]
+CMD ["python", "server3.py"]

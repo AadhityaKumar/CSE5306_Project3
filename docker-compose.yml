@@ -71,6 +71,38 @@ services:
       - update
     ports:
       - "50053:50053"
+    environment:
+      - NODE_ID=0
+      - NODE_PORT=server:50053
+      - PYTHONUNBUFFERED=1
+    profiles: ["distributed"]
+
+  server1:
+    build:
+      context: .
+      dockerfile: Dockerfiles/Dockerfile.server
+    depends_on:
+      - update
+    ports:
+      - "50055:50055"
+    environment:
+      - NODE_ID=1
+      - NODE_PORT=server1:50055
+      - PYTHONUNBUFFERED=1
+    profiles: ["distributed"]
+
+  server2:
+    build:
+      context: .
+      dockerfile: Dockerfiles/Dockerfile.server
+    depends_on:
+      - update
+    ports:
+      - "50056:50056"
+    environment:
+      - NODE_ID=2
+      - NODE_PORT=server2:50056
+      - PYTHONUNBUFFERED=1
     profiles: ["distributed"]
 
   # -------- MONOLITH VERSION --------
@@ -82,9 +114,22 @@ services:
       - "50053:50053"
     profiles: ["monolith"]
 
+  #client:
+  #  build:
+  #    context: .
+  #    dockerfile: Dockerfiles/Dockerfile.client
+  #  depends_on:
+  #    - server        # for distributed profile
+      # - monolith    # use this instead for monolith profile
+  #  stdin_open: true
+  #  tty: true
+
   client:
     build:
       context: .
       dockerfile: Dockerfiles/Dockerfile.client
+    depends_on:
+      - server
     stdin_open: true
     tty: true
+    profiles: ["distributed"]
