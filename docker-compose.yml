@@ -1,4 +1,5 @@
 services:
+  # SENSOR SERVICES - Distributed Profile
   airdata:
     build:
       context: .
@@ -63,6 +64,7 @@ services:
       - "50054:50054"
     profiles: ["distributed"]
 
+  # Raft Nodes - Distributed profile
   server:
     build:
       context: .
@@ -78,18 +80,18 @@ services:
     profiles: ["distributed"]
 
   server1:
-    build:
-      context: .
-      dockerfile: Dockerfiles/Dockerfile.server
-    depends_on:
-      - update
-    ports:
-      - "50055:50055"
-    environment:
-      - NODE_ID=1
-      - NODE_PORT=server1:50055
-      - PYTHONUNBUFFERED=1
-    profiles: ["distributed"]
+      build:
+        context: .
+        dockerfile: Dockerfiles/Dockerfile.server
+      depends_on:
+        - update
+      ports:
+        - "50055:50055"
+      environment:
+        - NODE_ID=1
+        - NODE_PORT=server1:50055
+        - PYTHONUNBUFFERED=1
+      profiles: ["distributed"]
 
   server2:
     build:
@@ -105,25 +107,35 @@ services:
       - PYTHONUNBUFFERED=1
     profiles: ["distributed"]
 
-  # -------- MONOLITH VERSION --------
-  monolith:
+  server3:
     build:
       context: .
-      dockerfile: Dockerfiles/Dockerfile.monolith
+      dockerfile: Dockerfiles/Dockerfile.server
+    depends_on:
+      - update
     ports:
-      - "50053:50053"
-    profiles: ["monolith"]
+      - "50057:50057"
+    environment:
+      - NODE_ID=3
+      - NODE_PORT=server3:50057
+      - PYTHONUNBUFFERED=1
+    profiles: ["distributed"]
 
-  #client:
-  #  build:
-  #    context: .
-  #    dockerfile: Dockerfiles/Dockerfile.client
-  #  depends_on:
-  #    - server        # for distributed profile
-      # - monolith    # use this instead for monolith profile
-  #  stdin_open: true
-  #  tty: true
+  server4:
+    build:
+      context: .
+      dockerfile: Dockerfiles/Dockerfile.server
+    depends_on:
+      - update
+    ports:
+      - "50058:50058"
+    environment:
+      - NODE_ID=4
+      - NODE_PORT=server4:50058
+      - PYTHONUNBUFFERED=1
+    profiles: ["distributed"]
 
+  # Client - Distributed profile
   client:
     build:
       context: .
@@ -132,4 +144,117 @@ services:
       - server
     stdin_open: true
     tty: true
+    environment:
+      - PYTHONUNBUFFERED=1
     profiles: ["distributed"]
+
+  # MONOLITH VERSION
+  monolith:
+    build:
+      context: .
+      dockerfile: Dockerfiles/Dockerfile.monolith
+    ports:
+      - "50053:50053"
+    profiles: ["monolith"]
+
+    # 2PC services - tcp profile 
+  tpc-coordinator:
+    build:
+      context: .
+      dockerfile: Dockerfiles/Dockerfile.tpc_coordinator
+    environment:
+      # Added to fix Docker output buffering issues
+      - PYTHONUNBUFFERED=1
+      - NODE_ID=coordinator
+      - PORT=50062
+      - PARTICIPANT_PORT=50060
+      - AGGREGATION_HOST=tpc-aggregation
+      - ANALYSIS_HOST=tpc-analysis
+      - UPDATE_HOST=tpc-update
+      - AIRDATA_HOST=tpc-airdata
+      - IMU_HOST=tpc-imu
+    ports:
+      - "50062:50062"
+    depends_on:
+      - tpc-aggregation
+      - tpc-analysis
+      - tpc-update
+      - tpc-airdata
+      - tpc-imu
+    # added to retry if connection fails
+    restart: on-failure
+    profiles: ["tpc"]
+
+  tpc-aggregation:
+    build:
+      context: .
+      dockerfile: Dockerfiles/Dockerfile.tpc_participant
+    environment:
+      - PYTHONUNBUFFERED=1
+      - NODE_ID=aggregation
+      - PORT=50060
+    ports:
+      - "50070:50060"
+    profiles: ["tpc"]
+
+  tpc-analysis:
+    build:
+      context: .
+      dockerfile: Dockerfiles/Dockerfile.tpc_participant
+    environment:
+      - PYTHONUNBUFFERED=1
+      - NODE_ID=analysis
+      - PORT=50060
+    ports:
+      - "50071:50060"
+    profiles: ["tpc"]
+
+  tpc-update:
+    build:
+      context: .
+      dockerfile: Dockerfiles/Dockerfile.tpc_participant
+    environment:
+      - PYTHONUNBUFFERED=1
+      - NODE_ID=update
+      - PORT=50060
+    ports:
+      - "50072:50060"
+    profiles: ["tpc"]
+
+  tpc-airdata:
+    build:
+      context: .
+      dockerfile: Dockerfiles/Dockerfile.tpc_participant
+    environment:
+      - PYTHONUNBUFFERED=1
+      - NODE_ID=airdata
+      - PORT=50060
+    ports:
+      - "50073:50060"
+    profiles: ["tpc"]
+
+  tpc-imu:
+    build:
+      context: .
+      dockerfile: Dockerfiles/Dockerfile.tpc_participant
+    environment:
+      - PYTHONUNBUFFERED=1
+      - NODE_ID=imu
+      - PORT=50060
+    ports:
+      - "50074:50060"
+    profiles: ["tpc"]
+
+  tpc-client:
+    build:
+      context: .
+      dockerfile: Dockerfiles/Dockerfile.tpc_client
+    environment:
+      - PYTHONUNBUFFERED=1
+      - COORDINATOR_HOST=tpc-coordinator
+      - COORDINATOR_PORT=50062
+    depends_on:
+      - tpc-coordinator
+    # added to restart if connection fails
+    restart: on-failure
+    profiles: ["tpc"]

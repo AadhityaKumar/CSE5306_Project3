@@ -8,33 +8,9 @@ import drone_pb2_grpc
 import raft_pb2
 import raft_pb2_grpc
 
-
 TARGET = "server:50053"
 servers = {}
-
-def find_leader():
-    global current_leader, servers
-    while 1:
-        for addr in servers:
-            try:
-                channel = grpc.insecure_channel(servers[addr])
-                stub = raft_pb2_grpc.RaftServiceStub(channel)
-
-                response = stub.GetLeader(raft_pb2.Empty(), timeout=0.2)
-
-                current_leader = response.nodeAddress
-                print(f"[Client] New leader: {current_leader}")
-                #channel2 = grpc.insecure_channel(servers[current_leader])
-                #stub2 = raft_pb2_grpc.RaftServiceStub(channel2)
-                #stub3 = drone_pb2_grpc.ServerStub(channel2)
-                stub2 = stub
-                stub3 = drone_pb2_grpc.ServerStub(channel)
-                #response2 = stub2.GetLeader(raft_pb2.Empty(), timeout=0.2)
-                return stub3, stub2
-
-            except grpc.RpcError:
-                continue
-        time.sleep(0.2)
+current_leader = None
 
 
 def init_servers():
@@ -45,13 +21,29 @@ def init_servers():
             parts = line.split(" ")
             servers[int(parts[0])] = f'{parts[1]}:{parts[2].rstrip()}'
 
+
+def find_leader():
+    global current_leader, servers
+    while True:
+        for addr in servers:
+            try:
+                channel = grpc.insecure_channel(servers[addr])
+                stub2 = raft_pb2_grpc.RaftServiceStub(channel)
+                response = stub2.GetLeader(raft_pb2.Empty(), timeout=0.2)
+                current_leader = response.nodeAddress
+                print(f"[Client] New leader: {current_leader}")
+                stub = drone_pb2_grpc.ServerStub(channel)
+                return stub, stub2
+            except grpc.RpcError:
+                continue
+        time.sleep(0.2)
+
+
 def add_node_to_cluster(stub, node_id, node_address):
     try:
-        #channel = grpc.insecure_channel(TARGET)
         channel2 = grpc.insecure_channel(node_address)
         temp_stub = raft_pb2_grpc.RaftServiceStub(channel2)
-        #raft_stub = raft_pb2_grpc.RaftServiceStub(channel)
-        response2 = temp_stub.ResetLeader(raft_pb2.LogRequest(ar=1))
+        temp_stub.ResetLeader(raft_pb2.LogRequest(ar=1))
         response = stub.AddNode(
             raft_pb2.AddNodeRequest(nodeId=node_id, nodeAddress=node_address)
         )
@@ -62,14 +54,13 @@ def add_node_to_cluster(stub, node_id, node_address):
 
 
 def measure_latency(stub, iterations=500):
+    """Measure RPC latency over a number of iterations."""
     times = []
-
     for _ in range(iterations):
         start = time.perf_counter()
         stub.SendCommand(drone_pb2.Command(text="sensor voltage"))
         end = time.perf_counter()
         times.append((end - start) * 1000)
-
     print("\n--- Latency Benchmark ---")
     print(f"Samples: {iterations}")
     print(f"Avg: {statistics.mean(times):.2f} ms")
@@ -81,13 +72,12 @@ def measure_latency(stub, iterations=500):
 
 
 def measure_throughput(stub, duration=10):
-    count = 0
+    """Measure requests per second over a given duration."""
+    count    = 0
     end_time = time.time() + duration
-
     while time.time() < end_time:
         stub.SendCommand(drone_pb2.Command(text="sensor voltage"))
         count += 1
-
     print("\n--- Throughput Test ---")
     print(f"Duration: {duration} sec")
     print(f"Total Requests: {count}")
@@ -96,13 +86,14 @@ def measure_throughput(stub, duration=10):
 
 
 def stress_test(clients=5, duration=10):
+    """Run concurrent clients hammering the server simultaneously."""
     print(f"\n--- Stress Test ({clients} clients, {duration}s) ---")
 
     def worker():
-        channel = grpc.insecure_channel(TARGET)
-        stub = drone_pb2_grpc.ServerStub(channel)
+        channel  = grpc.insecure_channel(TARGET)
+        stub     = drone_pb2_grpc.ServerStub(channel)
         end_time = time.time() + duration
-        count = 0
+        count    = 0
         while time.time() < end_time:
             stub.SendCommand(drone_pb2.Command(text="sensor voltage"))
             count += 1
@@ -131,7 +122,7 @@ def interactive_loop(stub, stub2):
             parts = cmd.split()
             n = int(parts[1]) if len(parts) > 1 else 500
             try:
-                response = stub2.GetLeader(raft_pb2.Empty(), timeout=0.2)
+                stub2.GetLeader(raft_pb2.Empty(), timeout=0.2)
             except grpc.RpcError:
                 stub, stub2 = find_leader()
                 continue
@@ -142,7 +133,7 @@ def interactive_loop(stub, stub2):
             parts = cmd.split()
             sec = int(parts[1]) if len(parts) > 1 else 10
             try:
-                response = stub2.GetLeader(raft_pb2.Empty(), timeout=0.2)
+                stub2.GetLeader(raft_pb2.Empty(), timeout=0.2)
             except grpc.RpcError:
                 stub, stub2 = find_leader()
                 continue
@@ -154,7 +145,7 @@ def interactive_loop(stub, stub2):
             clients = int(parts[1]) if len(parts) > 1 else 5
             sec = int(parts[2]) if len(parts) > 2 else 10
             try:
-                response = stub2.GetLeader(raft_pb2.Empty(), timeout=0.2)
+                stub2.GetLeader(raft_pb2.Empty(), timeout=0.2)
             except grpc.RpcError:
                 stub, stub2 = find_leader()
                 continue
@@ -167,18 +158,47 @@ def interactive_loop(stub, stub2):
                 print("Usage: addnode <id> <host:port>")
             else:
                 try:
-                    response = stub2.GetLeader(raft_pb2.Empty(), timeout=0.2)
+                    stub2.GetLeader(raft_pb2.Empty(), timeout=0.2)
                 except grpc.RpcError:
                     stub, stub2 = find_leader()
                     continue
                 add_node_to_cluster(stub2, int(parts[1]), parts[2])
             continue
 
+        if cmd == "getleader":
+            try:
+                response = stub2.GetLeader(raft_pb2.Empty(), timeout=0.2)
+                if response.nodeId == -1:
+                    print("No leader elected yet")
+                else:
+                    print(f"Leader: Node {response.nodeId} at {response.nodeAddress}")
+            except grpc.RpcError:
+                print("Could not reach any node — finding leader...")
+                stub, stub2 = find_leader()
+            continue
+
+        if cmd.startswith("suspend"):
+            parts = cmd.split()
+            if len(parts) != 3:
+                print("Usage: suspend <host:port> <seconds>")
+            else:
+                try:
+                    channel = grpc.insecure_channel(parts[1])
+                    temp_stub = raft_pb2_grpc.RaftServiceStub(channel)
+                    temp_stub.Suspend(raft_pb2.SuspendRequest(period=int(parts[2])))
+                    print(f"Node at {parts[1]} suspended for {parts[2]} seconds")
+                except grpc.RpcError as e:
+                    print(f"Failed to suspend node: {e}")
+            continue
+
         if cmd.startswith("log"):
-            stub3, stub4 = find_leader()
-            response = stub4.ViewLog(raft_pb2.LogRequest(ar=1))
+            stub, stub2 = find_leader()
+            response = stub2.ViewLog(raft_pb2.LogRequest(ar=1))
+            if not response.logs:
+                print("Log is empty")
             for log in response.logs:
-                print(log.op_command, log.op_term, log.operationIND)
+                print(f"command: {log.op_command}  term: {log.op_term}  index: {log.operationIND}")
+            continue
 
         if cmd == "quit":
             break
@@ -196,6 +216,7 @@ def interactive_loop(stub, stub2):
 
 
 def main():
+    """Connect to server and start interactive loop."""
     channel = grpc.insecure_channel(TARGET)
     stub = drone_pb2_grpc.ServerStub(channel)
     stub2 = raft_pb2_grpc.RaftServiceStub(channel)

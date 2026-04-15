@@ -8,6 +8,4 @@ COPY src/ ./src/
 
 WORKDIR /app/src
 
-EXPOSE 50060
-
-CMD ["python", "server3.py"]
+CMD ["python", "server.py"]

@@ -1,0 +1,75 @@
+syntax = "proto3";
+package tcp;
+
+// Shared message types
+
+message Empty {}
+
+message NodeInfo {
+  string node_id = 1;
+}
+
+// Voting Phase messages
+
+message VoteRequest {
+  string transaction_id = 1;
+  string coordinator_id = 2;
+  string operation       = 3;   // ex "commit_telemetry_batch"
+}
+
+message VoteResponse {
+  string transaction_id = 1;
+  string node_id        = 2;
+  bool   vote_commit    = 3;    // true = vote-commit, false = vote-abort
+  string reason         = 4;   // optional explanation on abort
+}
+
+// Decision Phase messages
+
+message Decision {
+  string transaction_id = 1;
+  bool   commit         = 2;   // true = global-commit, false = global-abort
+}
+
+message Acknowledgement {
+  string transaction_id = 1;
+  string node_id        = 2;
+  bool   success        = 3;
+}
+
+// phase communication
+// voting phase process and decision phase process on same node
+
+message PhaseResult {
+  string transaction_id = 1;
+  string node_id        = 2;
+  bool   ready          = 3;   // voting phase signals readiness to decision phase
+}
+
+message PhaseAck {
+  string transaction_id = 1;
+  bool   received       = 2;
+}
+
+// Services ~
+
+// Participant service — runs on every participant node
+service Participant {
+  // Phase1: Coordinator → Participant (vote request)
+  rpc RequestVote(VoteRequest) returns (VoteResponse);
+
+  // Phase2: Coordinator → Participant (final decision)
+  rpc Deliver(Decision) returns (Acknowledgement);
+
+  // Phase2: Intra-node — voting phase → decision phase (same container)
+  rpc NotifyDecisionPhase(PhaseResult) returns (PhaseAck);
+}
+
+// Coordinator service — runs on the server/coordinator node
+service Coordinator {
+  // Phase2: Intra-node — decision phase → voting phase (same container)
+  rpc NotifyVotingPhase(PhaseResult) returns (PhaseAck);
+
+  // Entry point: external trigger to start a transaction
+  rpc StartTransaction(VoteRequest) returns (Acknowledgement);
+}
