@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\nraft.proto\"3\n\x0eTermCandIDPair\x12\x0c\n\x04term\x18\x01 \x01(\x05\x12\x13\n\x0b\x63\x61ndidateID\x18\x02 \x01(\x05\"c\n\x12RequestVoteRequest\x12\"\n\tcandidate\x18\x01 \x01(\x0b\x32\x0f.TermCandIDPair\x12\x14\n\x0clastLogIndex\x18\x02 \x01(\x05\x12\x13\n\x0blastLogTerm\x18\x03 \x01(\x05\"/\n\x0eTermResultPair\x12\x0c\n\x04term\x18\x01 \x01(\x05\x12\x0f\n\x07verdict\x18\x02 \x01(\x08\"6\n\x13RequestVoteResponse\x12\x1f\n\x06result\x18\x01 \x01(\x0b\x32\x0f.TermResultPair\"2\n\x10TermLeaderIDPair\x12\x0c\n\x04term\x18\x01 \x01(\x05\x12\x10\n\x08leaderID\x18\x02 \x01(\x05\"?\n\x08LogEntry\x12\x0c\n\x04term\x18\x01 \x01(\x05\x12\x0f\n\x07\x63ommand\x18\x02 \x01(\t\x12\x14\n\x0coperationIND\x18\x03 \x01(\x05\"\x96\x01\n\x14\x41ppendEntriesRequest\x12!\n\x06leader\x18\x01 \x01(\x0b\x32\x11.TermLeaderIDPair\x12\x14\n\x0cprevLogIndex\x18\x02 \x01(\x05\x12\x13\n\x0bprevLogTerm\x18\x03 \x01(\x05\x12\x1a\n\x07\x65ntries\x18\x04 \x03(\x0b\x32\t.LogEntry\x12\x14\n\x0cleaderCommit\x18\x05 \x01(\x05\"8\n\x15\x41ppendEntriesResponse\x12\x1f\n\x06result\x18\x01 \x01(\x0b\x32\x0f.TermResultPair\"\x07\n\x05\x45mpty\"8\n\x11GetLeaderResponse\x12\x0e\n\x06nodeId\x18\x01 \x01(\x05\x12\x13\n\x0bnodeAddress\x18\x02 \x01(\t\" \n\x0eSuspendRequest\x12\x0e\n\x06period\x18\x01 \x01(\x05\"+\n\rSetValRequest\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t\"!\n\x0eSetValResponse\x12\x0f\n\x07verdict\x18\x01 \x01(\x08\"\x1c\n\rGetValRequest\x12\x0b\n\x03key\x18\x01 \x01(\t\"0\n\x0eGetValResponse\x12\x0f\n\x07verdict\x18\x01 \x01(\x08\x12\r\n\x05value\x18\x02 \x01(\t\"5\n\x0e\x41\x64\x64NodeRequest\x12\x0e\n\x06nodeId\x18\x01 \x01(\x05\x12\x13\n\x0bnodeAddress\x18\x02 \x01(\t\"3\n\x0f\x41\x64\x64NodeResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\"&\n\x13\x44roneCommandRequest\x12\x0f\n\x07\x63ommand\x18\x01 \x01(\t\"8\n\x14\x44roneCommandResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\"\x18\n\nLogRequest\x12\n\n\x02\x61r\x18\x01 \x01(\x05\"G\n\nLogEntries\x12\x12\n\nop_command\x18\x01 \x01(\t\x12\x0f\n\x07op_term\x18\x02 \x01(\x05\x12\x14\n\x0coperationIND\x18\x03 \x01(\x05\"(\n\x0bLogResponse\x12\x19\n\x04logs\x18\x01 \x03(\x0b\x32\x0b.LogEntries2\xf4\x03\n\x0bRaftService\x12:\n\x0bRequestVote\x12\x13.RequestVoteRequest\x1a\x14.RequestVoteResponse\"\x00\x12@\n\rAppendEntries\x12\x15.AppendEntriesRequest\x1a\x16.AppendEntriesResponse\"\x00\x12)\n\tGetLeader\x12\x06.Empty\x1a\x12.GetLeaderResponse\"\x00\x12$\n\x07Suspend\x12\x0f.SuspendRequest\x1a\x06.Empty\"\x00\x12+\n\x06SetVal\x12\x0e.SetValRequest\x1a\x0f.SetValResponse\"\x00\x12+\n\x06GetVal\x12\x0e.GetValRequest\x1a\x0f.GetValResponse\"\x00\x12,\n\x07\x41\x64\x64Node\x12\x0f.AddNodeRequest\x1a\x10.AddNodeResponse\x12?\n\x10SendDroneCommand\x12\x14.DroneCommandRequest\x1a\x15.DroneCommandResponse\x12$\n\x07ViewLog\x12\x0b.LogRequest\x1a\x0c.LogResponse\x12\'\n\x0bResetLeader\x12\x0b.LogRequest\x1a\x0b.LogRequestb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\nraft.proto\"3\n\x0eTermCandIDPair\x12\x0c\n\x04term\x18\x01 \x01(\x05\x12\x13\n\x0b\x63\x61ndidateID\x18\x02 \x01(\x05\"c\n\x12RequestVoteRequest\x12\"\n\tcandidate\x18\x01 \x01(\x0b\x32\x0f.TermCandIDPair\x12\x14\n\x0clastLogIndex\x18\x02 \x01(\x05\x12\x13\n\x0blastLogTerm\x18\x03 \x01(\x05\"/\n\x0eTermResultPair\x12\x0c\n\x04term\x18\x01 \x01(\x05\x12\x0f\n\x07verdict\x18\x02 \x01(\x08\"6\n\x13RequestVoteResponse\x12\x1f\n\x06result\x18\x01 \x01(\x0b\x32\x0f.TermResultPair\"2\n\x10TermLeaderIDPair\x12\x0c\n\x04term\x18\x01 \x01(\x05\x12\x10\n\x08leaderID\x18\x02 \x01(\x05\"?\n\x08LogEntry\x12\x0c\n\x04term\x18\x01 \x01(\x05\x12\x0f\n\x07\x63ommand\x18\x02 \x01(\t\x12\x14\n\x0coperationIND\x18\x03 \x01(\x05\"\x96\x01\n\x14\x41ppendEntriesRequest\x12!\n\x06leader\x18\x01 \x01(\x0b\x32\x11.TermLeaderIDPair\x12\x14\n\x0cprevLogIndex\x18\x02 \x01(\x05\x12\x13\n\x0bprevLogTerm\x18\x03 \x01(\x05\x12\x1a\n\x07\x65ntries\x18\x04 \x03(\x0b\x32\t.LogEntry\x12\x14\n\x0cleaderCommit\x18\x05 \x01(\x05\"8\n\x15\x41ppendEntriesResponse\x12\x1f\n\x06result\x18\x01 \x01(\x0b\x32\x0f.TermResultPair\"\x07\n\x05\x45mpty\"8\n\x11GetLeaderResponse\x12\x0e\n\x06nodeId\x18\x01 \x01(\x05\x12\x13\n\x0bnodeAddress\x18\x02 \x01(\t\" \n\x0eSuspendRequest\x12\x0e\n\x06period\x18\x01 \x01(\x05\"5\n\x0e\x41\x64\x64NodeRequest\x12\x0e\n\x06nodeId\x18\x01 \x01(\x05\x12\x13\n\x0bnodeAddress\x18\x02 \x01(\t\"3\n\x0f\x41\x64\x64NodeResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\"&\n\x13\x44roneCommandRequest\x12\x0f\n\x07\x63ommand\x18\x01 \x01(\t\"8\n\x14\x44roneCommandResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\"\x18\n\nLogRequest\x12\n\n\x02\x61r\x18\x01 \x01(\x05\"G\n\nLogEntries\x12\x12\n\nop_command\x18\x01 \x01(\t\x12\x0f\n\x07op_term\x18\x02 \x01(\x05\x12\x14\n\x0coperationIND\x18\x03 \x01(\x05\"(\n\x0bLogResponse\x12\x19\n\x04logs\x18\x01 \x03(\x0b\x32\x0b.LogEntries2\x9a\x03\n\x0bRaftService\x12:\n\x0bRequestVote\x12\x13.RequestVoteRequest\x1a\x14.RequestVoteResponse\"\x00\x12@\n\rAppendEntries\x12\x15.AppendEntriesRequest\x1a\x16.AppendEntriesResponse\"\x00\x12)\n\tGetLeader\x12\x06.Empty\x1a\x12.GetLeaderResponse\"\x00\x12$\n\x07Suspend\x12\x0f.SuspendRequest\x1a\x06.Empty\"\x00\x12,\n\x07\x41\x64\x64Node\x12\x0f.AddNodeRequest\x1a\x10.AddNodeResponse\x12?\n\x10SendDroneCommand\x12\x14.DroneCommandRequest\x1a\x15.DroneCommandResponse\x12$\n\x07ViewLog\x12\x0b.LogRequest\x1a\x0c.LogResponse\x12\'\n\x0bResetLeader\x12\x0b.LogRequest\x1a\x0b.LogRequestb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -53,28 +53,20 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_GETLEADERRESPONSE']._serialized_end=666
   _globals['_SUSPENDREQUEST']._serialized_start=668
   _globals['_SUSPENDREQUEST']._serialized_end=700
-  _globals['_SETVALREQUEST']._serialized_start=702
-  _globals['_SETVALREQUEST']._serialized_end=745
-  _globals['_SETVALRESPONSE']._serialized_start=747
-  _globals['_SETVALRESPONSE']._serialized_end=780
-  _globals['_GETVALREQUEST']._serialized_start=782
-  _globals['_GETVALREQUEST']._serialized_end=810
-  _globals['_GETVALRESPONSE']._serialized_start=812
-  _globals['_GETVALRESPONSE']._serialized_end=860
-  _globals['_ADDNODEREQUEST']._serialized_start=862
-  _globals['_ADDNODEREQUEST']._serialized_end=915
-  _globals['_ADDNODERESPONSE']._serialized_start=917
-  _globals['_ADDNODERESPONSE']._serialized_end=968
-  _globals['_DRONECOMMANDREQUEST']._serialized_start=970
-  _globals['_DRONECOMMANDREQUEST']._serialized_end=1008
-  _globals['_DRONECOMMANDRESPONSE']._serialized_start=1010
-  _globals['_DRONECOMMANDRESPONSE']._serialized_end=1066
-  _globals['_LOGREQUEST']._serialized_start=1068
-  _globals['_LOGREQUEST']._serialized_end=1092
-  _globals['_LOGENTRIES']._serialized_start=1094
-  _globals['_LOGENTRIES']._serialized_end=1165
-  _globals['_LOGRESPONSE']._serialized_start=1167
-  _globals['_LOGRESPONSE']._serialized_end=1207
-  _globals['_RAFTSERVICE']._serialized_start=1210
-  _globals['_RAFTSERVICE']._serialized_end=1710
+  _globals['_ADDNODEREQUEST']._serialized_start=702
+  _globals['_ADDNODEREQUEST']._serialized_end=755
+  _globals['_ADDNODERESPONSE']._serialized_start=757
+  _globals['_ADDNODERESPONSE']._serialized_end=808
+  _globals['_DRONECOMMANDREQUEST']._serialized_start=810
+  _globals['_DRONECOMMANDREQUEST']._serialized_end=848
+  _globals['_DRONECOMMANDRESPONSE']._serialized_start=850
+  _globals['_DRONECOMMANDRESPONSE']._serialized_end=906
+  _globals['_LOGREQUEST']._serialized_start=908
+  _globals['_LOGREQUEST']._serialized_end=932
+  _globals['_LOGENTRIES']._serialized_start=934
+  _globals['_LOGENTRIES']._serialized_end=1005
+  _globals['_LOGRESPONSE']._serialized_start=1007
+  _globals['_LOGRESPONSE']._serialized_end=1047
+  _globals['_RAFTSERVICE']._serialized_start=1050
+  _globals['_RAFTSERVICE']._serialized_end=1460
 # @@protoc_insertion_point(module_scope)

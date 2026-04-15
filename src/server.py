@@ -254,13 +254,6 @@ def update_log(cmd):
     return response.success, response.message
 
 
-def get_val(key):
-    #Look up a key in the replicated key-value store
-    if key not in myDict:
-        return (False, "None")
-    return (True, myDict[key])
-
-
 def apply_commits():
     
     # Apply all committed log entries to the state machine.
@@ -598,14 +591,6 @@ class ServerService(drone_pb2_grpc.ServerServicer):
         """Force this node back to follower (used when adding new nodes)."""
         leader_reset()
         return raft_pb2.LogRequest(ar=1)
-
-    def SetVal(self, request, context):
-        """Placeholder — key-value sets handled via update_log."""
-        print("hi")
-
-    def GetVal(self, request, context):
-        """Placeholder — key-value gets handled via get_val."""
-        print("hi")
 
 
 # Server Startup

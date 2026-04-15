@@ -5,8 +5,6 @@ service RaftService {
     rpc AppendEntries (AppendEntriesRequest) returns (AppendEntriesResponse) {};
     rpc GetLeader (Empty) returns (GetLeaderResponse) {};
     rpc Suspend (SuspendRequest) returns (Empty) {};
-    rpc SetVal (SetValRequest) returns (SetValResponse) {};
-    rpc GetVal (GetValRequest) returns (GetValResponse) {};
     rpc AddNode (AddNodeRequest) returns (AddNodeResponse);
     rpc SendDroneCommand (DroneCommandRequest) returns (DroneCommandResponse);
     rpc ViewLog (LogRequest) returns (LogResponse);
@@ -66,24 +64,6 @@ message GetLeaderResponse {
 
 message SuspendRequest {
     int32 period = 1;
-}
-
-message SetValRequest {
-    string key = 1;
-    string value = 2;
-}
-
-message SetValResponse {
-    bool verdict = 1;
-}
-
-message GetValRequest {
-    string key = 1;
-}
-
-message GetValResponse {
-    bool verdict = 1;
-    string value = 2;
 }
 
 message AddNodeRequest {
