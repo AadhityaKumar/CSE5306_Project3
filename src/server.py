@@ -11,7 +11,7 @@ import raft_pb2_grpc
 
 # Global Raft State
 servers    = {}       # dict of node_id -> host:port
-id         = 0        # node's ID
+id         = 0        # this node's ID
 myTerm     = 0        # current term number
 timer      = 0        # increments every ms, resets on heartbeat
 o          = 0        # operation index counter
@@ -41,11 +41,9 @@ def add_node(node_id, node_address):
     servers[node_id] = node_address
 
     if myState == "Leader":
-        # Initialize tracking state for the new peer
         nextIndex[node_id]  = commitIndex + 1
         matchIndex[node_id] = 0
 
-        # Notify all existing peers about the new node
         for key in servers:
             if key == id:
                 continue
@@ -58,7 +56,6 @@ def add_node(node_id, node_address):
             except grpc.RpcError:
                 continue
     else:
-        # Forward to leader
         channel = grpc.insecure_channel(servers[myLeaderId])
         stub    = raft_pb2_grpc.RaftServiceStub(channel)
         print(f"Node {id} sends RPC AddNode to Node {myLeaderId}")
@@ -70,7 +67,7 @@ def add_node(node_id, node_address):
 
 
 def invoke_term_change(term):
-    """Revert to follower state when a higher term is discovered."""
+    # Revert to follower state when a higher term is discovered
     global myLeaderId, votedId, timer, myState, myTerm
 
     if myState != "Follower" or term != myTerm:
@@ -84,7 +81,7 @@ def invoke_term_change(term):
 
 
 def init_servers():
-    """Load cluster peers from config2.conf."""
+    #Load cluster peers from config2.conf
     global servers, inSystem
     servers = {}
     with open("config2.conf", "r") as f:
@@ -96,7 +93,7 @@ def init_servers():
 
 
 def startup():
-    """Initialize all global state and read config."""
+    # Initialize all global state and read config
     global id, myTerm, timer, timerLimit, myState, votedId, servers, myPort, inSystem
     global myLeaderId, suspended, globalPeriod, commitIndex, lastApplied, o
     global logs, myDict, nextIndex, matchIndex
@@ -117,7 +114,7 @@ def startup():
     globalPeriod = 0
     myTerm       = 0
     timer        = 0
-    timerLimit   = random.randint(1500, 3000)  # randomized election timeout
+    timerLimit   = random.randint(1500, 3000)
     myState      = "Follower"
     votedId      = -1
     myLeaderId   = -1
@@ -127,29 +124,24 @@ def startup():
     print("I am a follower. Term: 0")
 
 
-# Raft
+# Raft Core Logic
 def request_vote(term, candidateId, lastLogIndex, lastLogTerm):
-    """
-    Handle incoming RequestVote RPC.
-    Returns (term, granted) — grants vote if candidate log is at least as up to date.
-    """
+    # Handle incoming RequestVote RPC.
+    # Returns (term, granted) — grants vote if candidate log is at least as up to date.
+
     global votedId, myTerm, myState, logs
 
-    # If candidate has higher term, update and retry
     if term > myTerm:
         myTerm  = term
         votedId = -1
         return request_vote(term, candidateId, lastLogIndex, lastLogTerm)
 
-    # Reject if stale term or already voted this term
     if term < myTerm or votedId != -1:
         return (myTerm, False)
 
-    # Reject if candidate log is behind ours
     if lastLogIndex < len(logs):
         return (myTerm, False)
 
-    # Reject if last log term doesn't match
     if lastLogIndex != 0 and logs[lastLogIndex - 1]["term"] != lastLogTerm:
         return (myTerm, False)
 
@@ -163,25 +155,19 @@ def request_vote(term, candidateId, lastLogIndex, lastLogTerm):
 
 
 def append_entries(term, leaderId, prevLogIndex, prevLogTerm, entries, leaderCommit):
-    """
-    Handle incoming AppendEntries RPC.
-    Used for both heartbeats (empty entries) and log replication.
-    Returns (term, success).
-    """
+    # Handle incoming AppendEntries RPC.
+    # Used for both heartbeats (empty entries) and log replication.
+    # Returns (term, success).
     global myTerm, myState, timer, myLeaderId, logs, commitIndex
 
-    # Reset election timer on every AppendEntries
     timer = 0
 
-    # Reject if leader term is stale
     if myTerm > term:
         return (myTerm, False)
 
-    # Reject if log doesn't contain prevLogIndex entry
     if prevLogIndex > len(logs):
         return (myTerm, False)
 
-    # Find where our log diverges from leader's and truncate
     entriesIndex = 0
     logsIndex    = prevLogIndex
 
@@ -192,10 +178,8 @@ def append_entries(term, leaderId, prevLogIndex, prevLogTerm, entries, leaderCom
         logsIndex    += 1
         entriesIndex += 1
 
-    # Append any new entries from leader
     logs += entries[entriesIndex:]
 
-    # Advance commit index if leader has committed further
     if leaderCommit > commitIndex:
         commitIndex = min(leaderCommit, prevLogIndex + len(entries))
 
@@ -211,7 +195,7 @@ def append_entries(term, leaderId, prevLogIndex, prevLogTerm, entries, leaderCom
 
 
 def get_leader():
-    """Return the current known leader ID and address."""
+    #Return the current known leader ID and address
     global myLeaderId, votedId, servers
 
     print("Command from client: getleader")
@@ -229,7 +213,7 @@ def get_leader():
 
 
 def suspend(period):
-    """Suspend this node for a given number of seconds (simulates failure)."""
+    #Suspend this node for a given number of seconds (simulates failure)
     global suspended, globalPeriod
 
     print(f"Command from client: suspend {period}")
@@ -240,11 +224,9 @@ def suspend(period):
 
 
 def update_log(cmd):
-    """
-    Append a command to the log.
-    If leader: appends directly.
-    If follower: forwards to leader via SendDroneCommand RPC.
-    """
+    # Append a command to the log.
+    # If leader: appends directly.
+    # If follower: forwards to leader via SendDroneCommand RPC.
     global logs, o
 
     if myState == "Candidate":
@@ -258,7 +240,6 @@ def update_log(cmd):
     if myLeaderId == -1:
         return False, "no leader elected yet"
 
-    # Forward to leader
     channel = grpc.insecure_channel(servers[myLeaderId])
     stub    = raft_pb2_grpc.RaftServiceStub(channel)
 
@@ -274,18 +255,17 @@ def update_log(cmd):
 
 
 def get_val(key):
-    """Look up a key in the replicated key-value store."""
+    #Look up a key in the replicated key-value store
     if key not in myDict:
         return (False, "None")
     return (True, myDict[key])
 
 
 def apply_commits():
-    """
-    Apply all committed log entries to the state machine.
-    Drone commands are forwarded to the update service.
-    Key-value commands are stored in myDict.
-    """
+    
+    # Apply all committed log entries to the state machine.
+    # Drone commands are forwarded to the update service.
+    # Key-value commands are stored in myDict
     global myDict, lastApplied
 
     while lastApplied < commitIndex:
@@ -293,7 +273,6 @@ def apply_commits():
         command = entry["command"]
 
         if command.startswith("cmd "):
-            # Forward drone command to update service
             actual_cmd = command[4:]
             try:
                 print(f"applying command {actual_cmd}")
@@ -303,7 +282,6 @@ def apply_commits():
             except Exception as e:
                 print(f"Failed to apply drone command '{actual_cmd}': {e}")
         else:
-            # Store key-value pair
             parts = command.split(" ", 1)
             if len(parts) == 2:
                 myDict[parts[0]] = parts[1]
@@ -311,6 +289,7 @@ def apply_commits():
                 print(f"inaccurate command")
 
         lastApplied += 1
+
 
 
 # State Handlers
@@ -325,7 +304,6 @@ def handle_leader_init():
 
     print(f"I am a leader. Term: {myTerm}")
 
-    # Initialize tracking indexes for all peers
     for key in servers:
         if key == id:
             continue
@@ -343,10 +321,10 @@ def handle_candidate_init():
     print("The leader is dead")
     timer = 0
     invoke_term_change(myTerm + 1)
-    myState = "Candidate"
+    myState    = "Candidate"
     print(f"I am a candidate. Term: {myTerm}")
 
-    vote_count = 1  # vote for self
+    vote_count = 1
     votedId    = id
     reachable  = 1
     print(f"Voted for node {id}")
@@ -380,7 +358,6 @@ def handle_candidate_init():
 
     print("Votes received")
 
-    # Become leader if majority of reachable nodes voted for us
     if vote_count >= reachable / 2:
         handle_leader_init()
 
@@ -416,7 +393,6 @@ def handle_leader():
     """
     global timer, commitIndex, nextIndex, matchIndex, logs
 
-    # Only send heartbeats every 1000ms
     if timer % 1000 != 0:
         return
 
@@ -426,7 +402,6 @@ def handle_leader():
         if key == id:
             continue
 
-        # Retry loop to handle log inconsistencies
         while True:
             try:
                 channel      = grpc.insecure_channel(servers[key])
@@ -455,7 +430,6 @@ def handle_leader():
                 break
 
             if result:
-                # Update tracking indexes on success
                 nextIndex[key]  = matchIndex[key] = prevLogIndex + len(paramEntries) + 1
                 matchIndex[key] -= 1
                 nextIndex[key]   = max(nextIndex[key], 1)
@@ -465,13 +439,11 @@ def handle_leader():
                 invoke_term_change(term)
                 return
 
-            # Decrement nextIndex and retry on failure
             nextIndex[key] -= 1
             if nextIndex[key] == 0:
                 nextIndex[key] = 1
                 break
 
-    # Advance commitIndex if majority have replicated
     while commitIndex < len(logs):
         newCommitIndex    = commitIndex + 1
         reachable_servers = 1 + len(matchIndex)
@@ -519,7 +491,6 @@ def handle_current_state():
 # gRPC Service
 class ServerService(drone_pb2_grpc.ServerServicer):
     def __init__(self):
-        # Connect to drone update service for command forwarding
         self.channel = grpc.insecure_channel("update:50054")
         self.stub    = drone_pb2_grpc.UpdateStub(self.channel)
 

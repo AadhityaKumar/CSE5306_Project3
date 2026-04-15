@@ -14,6 +14,7 @@ current_leader = None
 
 
 def init_servers():
+    #Load cluster peers from config2.conf
     global servers
     servers = {}
     with open("config2.conf", "r") as f:
@@ -23,12 +24,13 @@ def init_servers():
 
 
 def find_leader():
+    #Loop through all known servers until one responds with a leader
     global current_leader, servers
     while True:
         for addr in servers:
             try:
-                channel = grpc.insecure_channel(servers[addr])
-                stub2 = raft_pb2_grpc.RaftServiceStub(channel)
+                channel  = grpc.insecure_channel(servers[addr])
+                stub2    = raft_pb2_grpc.RaftServiceStub(channel)
                 response = stub2.GetLeader(raft_pb2.Empty(), timeout=0.2)
                 current_leader = response.nodeAddress
                 print(f"[Client] New leader: {current_leader}")
@@ -40,11 +42,12 @@ def find_leader():
 
 
 def add_node_to_cluster(stub, node_id, node_address):
+    #Send AddNode RPC to the cluster to register a new peer
     try:
-        channel2 = grpc.insecure_channel(node_address)
+        channel2  = grpc.insecure_channel(node_address)
         temp_stub = raft_pb2_grpc.RaftServiceStub(channel2)
         temp_stub.ResetLeader(raft_pb2.LogRequest(ar=1))
-        response = stub.AddNode(
+        response  = stub.AddNode(
             raft_pb2.AddNodeRequest(nodeId=node_id, nodeAddress=node_address)
         )
         servers[node_id] = node_address
@@ -54,7 +57,7 @@ def add_node_to_cluster(stub, node_id, node_address):
 
 
 def measure_latency(stub, iterations=500):
-    """Measure RPC latency over a number of iterations."""
+    #Measure RPC latency over a number of iterations
     times = []
     for _ in range(iterations):
         start = time.perf_counter()
@@ -72,7 +75,7 @@ def measure_latency(stub, iterations=500):
 
 
 def measure_throughput(stub, duration=10):
-    """Measure requests per second over a given duration."""
+    #Measure requests per second over a given duration
     count    = 0
     end_time = time.time() + duration
     while time.time() < end_time:
@@ -86,7 +89,7 @@ def measure_throughput(stub, duration=10):
 
 
 def stress_test(clients=5, duration=10):
-    """Run concurrent clients hammering the server simultaneously."""
+    #Run concurrent clients hammering the server simultaneously
     print(f"\n--- Stress Test ({clients} clients, {duration}s) ---")
 
     def worker():
@@ -109,6 +112,7 @@ def stress_test(clients=5, duration=10):
 
 
 def interactive_loop(stub, stub2):
+    #Main interactive command loop
     print("Type 'help' for commands.")
     print("Benchmark commands:")
     print("  benchmark <iterations>")
@@ -143,7 +147,7 @@ def interactive_loop(stub, stub2):
         if cmd.startswith("stress"):
             parts = cmd.split()
             clients = int(parts[1]) if len(parts) > 1 else 5
-            sec = int(parts[2]) if len(parts) > 2 else 10
+            sec     = int(parts[2]) if len(parts) > 2 else 10
             try:
                 stub2.GetLeader(raft_pb2.Empty(), timeout=0.2)
             except grpc.RpcError:
@@ -183,7 +187,7 @@ def interactive_loop(stub, stub2):
                 print("Usage: suspend <host:port> <seconds>")
             else:
                 try:
-                    channel = grpc.insecure_channel(parts[1])
+                    channel   = grpc.insecure_channel(parts[1])
                     temp_stub = raft_pb2_grpc.RaftServiceStub(channel)
                     temp_stub.Suspend(raft_pb2.SuspendRequest(period=int(parts[2])))
                     print(f"Node at {parts[1]} suspended for {parts[2]} seconds")
@@ -193,7 +197,7 @@ def interactive_loop(stub, stub2):
 
         if cmd.startswith("log"):
             stub, stub2 = find_leader()
-            response = stub2.ViewLog(raft_pb2.LogRequest(ar=1))
+            response    = stub2.ViewLog(raft_pb2.LogRequest(ar=1))
             if not response.logs:
                 print("Log is empty")
             for log in response.logs:
@@ -216,10 +220,10 @@ def interactive_loop(stub, stub2):
 
 
 def main():
-    """Connect to server and start interactive loop."""
+    #Connect to server and start interactive loop
     channel = grpc.insecure_channel(TARGET)
-    stub = drone_pb2_grpc.ServerStub(channel)
-    stub2 = raft_pb2_grpc.RaftServiceStub(channel)
+    stub    = drone_pb2_grpc.ServerStub(channel)
+    stub2   = raft_pb2_grpc.RaftServiceStub(channel)
     interactive_loop(stub, stub2)
 
 
