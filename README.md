@@ -310,8 +310,6 @@ Type "log" into the client
 
 # 11. Resources
 
-https://github.com/KuronoSangatsu7/Raft_Consensus/tree/master
-
 https://raft.github.io/raft.pdf
 
 https://thesecretlivesofdata.com/raft/
