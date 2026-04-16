@@ -2,6 +2,9 @@
 CSE 5306 – Project 2  
 gRPC + Docker Compose
 
+GITHUB LINK: https://github.com/AadhityaKumar/CSE5306_Project3.git
+- CODE IN THE MASTER BRANCH
+
 ---
 
 # 1. Overview
@@ -50,40 +53,52 @@ This removes inter-container RPC overhead while preserving identical client func
 # 3. Project Structure
 
 src/
-  aggregation.py
-  analysis.py
-  update.py
-  server.py
-  client.py
-  monolith.py
-  imu_sensor.py
-  gps_sensor.py
-  engine_sensor.py
-  battery_sensor.py
-  airdata_sensor.py
-  drone.proto
-  drone_pb2.py
-  drone_pb2_grpc.py
-  config.conf
-  raft_pb2.py
-  raft_pb2_grpc.py
+  - aggregation.py
+  - analysis.py
+  - update.py
+  - server.py
+  - client.py
+  - monolith.py
+  - imu_sensor.py
+  - gps_sensor.py
+  - engine_sensor.py
+  - battery_sensor.py
+  - airdata_sensor.py
+  - drone.proto
+  - drone_pb2.py
+  - drone_pb2_grpc.py
+  - config.conf
+  - raft_pb2.py
+  - raft_pb2_grpc.py
+  - tpc.proto
+  - tpc_pb2.py
+  - tpc_pb2_grpc.py
+  - coordinator.py
+  - participant.py
+  - tpc_client.py
 
 Dockerfiles/
-  Dockerfile.airdata
-  Dockerfile.battery
-  Dockerfile.engine
-  Dockerfile.gps
-  Dockerfile.imu
-  Dockerfile.aggregation
-  Dockerfile.analysis
-  Dockerfile.update
-  Dockerfile.server
-  Dockerfile.client
-  Dockerfile.monolith
+  - Dockerfile.airdata
+  - Dockerfile.battery
+  - Dockerfile.engine
+  - Dockerfile.gps
+  - Dockerfile.imu
+  - Dockerfile.aggregation
+  - Dockerfile.analysis
+  - Dockerfile.update
+  - Dockerfile.server
+  - Dockerfile.client
+  - Dockerfile.monolith
+  - Dockerfile.tpc_coordinator
+  - Dockerfile.tpc_participant
+  - Dockerfile.tpc_client
 
 docker-compose.yml
+
 run_distributed.sh
+
 run_monolith.sh
+
 README.md
 
 All Python source files reside in `src/`.
@@ -299,17 +314,53 @@ Type "log" into the client
 
 ---
 
-# 12. Notes
+# 12. 2PC
+
+To start 2PC on the system use "docker compose --profile tpc up --build"
+
+The system will automatically run a full 2PC round on startup. The tpc-client container triggers a transaction, the coordinator broadcasts vote requests to all 5 participants, collects votes, and sends a global commit or abort decision.
+
+To stop: "docker compose --profile tpc down -v --remove-orphans"
+
+You are able to run commands in another terminal while viewing the system's output by running this command in another terminal: "docker attach cse5306_project3-client-1"
+
+You can then run commands like:
+
+"getleader" - Shows the current Raft leader node and address
+
+"suspend <host:port> <seconds>" - Suspends a node for a given period to simulate failure
+
+"sensor <name>" - Gets current telemetry value (ex. sensor voltage)
+
+"quit" - Exits the client
+
+
+---
+
+# 13. Notes
 
 - Do not run distributed and monolith simultaneously.
 - Always switch using provided scripts.
 - Ensure port 50053 is free before starting either architecture.
 - Benchmarks should be run with minimal host background load for accurate results.
+- Do not run profiles simultaneously. The distributed and tpc profiles use overlapping port ranges.
+- Attaching to the client - the client container must be attached from a separate terminal window while the cluster is running in another.
 
 ---
 
-# 11. Resources
+# 14. Resources
 
 https://raft.github.io/raft.pdf
 
 https://thesecretlivesofdata.com/raft/
+
+https://vamsi995.github.io/projects/Raft/
+
+https://www.geeksforgeeks.org/dbms/two-phase-commit-protocol-distributed-transaction-management/
+
+Other sources, such as ChatGPT, for help:
+- documentation
+- debugging docker + python code
+- structure questions
+
+
