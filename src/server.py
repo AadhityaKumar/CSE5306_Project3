@@ -84,7 +84,7 @@ def init_servers():
     #Load cluster peers from config2.conf
     global servers, inSystem
     servers = {}
-    with open("config2.conf", "r") as f:
+    with open("config.conf", "r") as f:
         for line in f:
             parts = line.split(" ")
             servers[int(parts[0])] = f'{parts[1]}:{parts[2].rstrip()}'
@@ -94,7 +94,7 @@ def init_servers():
 
 def startup():
     # Initialize all global state and read config
-    global id, myTerm, timer, timerLimit, myState, votedId, servers, myPort, inSystem
+    global id, myTerm, timer, timerLimit, myState, votedId, servers, myPort, inSystem, election_split
     global myLeaderId, suspended, globalPeriod, commitIndex, lastApplied, o
     global logs, myDict, nextIndex, matchIndex
 
@@ -119,6 +119,7 @@ def startup():
     votedId      = -1
     myLeaderId   = -1
     o            = 0
+    election_split = False
 
     print(f"The server starts at {myPort}")
     print("I am a follower. Term: 0")
@@ -309,12 +310,14 @@ def handle_candidate_init():
     Transition to candidate state and start a leader election.
     Sends RequestVote to all peers and becomes leader if majority votes received.
     """
-    global timer, myTerm, myState, votedId, myLeaderId
+    global timer, myTerm, myState, votedId, myLeaderId, timerLimit, election_split
 
     print("The leader is dead")
     timer = 0
     invoke_term_change(myTerm + 1)
     myState    = "Candidate"
+
+    timerLimit = random.randint(1500, 3000)
     print(f"I am a candidate. Term: {myTerm}")
 
     vote_count = 1
@@ -322,6 +325,7 @@ def handle_candidate_init():
     reachable  = 1
     print(f"Voted for node {id}")
 
+    time.sleep(random.uniform(0.01, 0.05))
     for key in servers:
         if key == id:
             continue
@@ -347,12 +351,15 @@ def handle_candidate_init():
             invoke_term_change(term)
             return
 
+
         vote_count += result == True
 
     print("Votes received")
 
-    if vote_count >= reachable / 2:
+    if not election_split and vote_count >= reachable / 2:
         handle_leader_init()
+    else:
+        election_split = False
 
 
 def handle_follower():
@@ -368,8 +375,9 @@ def handle_candidate():
     global timer, timerLimit
 
     if timer >= timerLimit:
+        print("retrying election")
+        handle_candidate_init()
         timerLimit = random.randint(1500, 3000)
-        invoke_term_change(myTerm)
 
 
 def leader_reset():
