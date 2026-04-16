@@ -283,6 +283,9 @@ First, remove the node to be added during runtime from config.conf.
 Run the project, and type "addnode (node-id) (server-name)" in the client.
 For example, to add server 4 during runtime, first remove it from config.conf, run, then type "addnode 4 server4:50058".
 
+To view the log:
+Type "log" into the client
+
 ---
 
 # 12. Notes
