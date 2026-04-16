@@ -305,3 +305,13 @@ Type "log" into the client
 - Always switch using provided scripts.
 - Ensure port 50053 is free before starting either architecture.
 - Benchmarks should be run with minimal host background load for accurate results.
+
+---
+
+# 11. Resources
+
+https://github.com/KuronoSangatsu7/Raft_Consensus/tree/master
+
+https://raft.github.io/raft.pdf
+
+https://thesecretlivesofdata.com/raft/
