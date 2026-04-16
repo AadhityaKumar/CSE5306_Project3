@@ -271,19 +271,30 @@ docker compose down -v --remove-orphans
 # 11. RAFT
 
 To view output of a server node, in another terminal:
+
 Go to the project3 directory while running and type "docker compose --profile distributed logs -f (node-name)"
+
 For example, to view the output of server 1, type "docker compose --profile distributed logs -f server1"
 
+
 To suspend a node:
+
 In client, type "suspend (server-name) (seconds)
+
 For example, in order to suspend server 1 for 10 seconds, type "suspend server1:50055 10".
 
+
 To add a node during runtime:
+
 First, remove the node to be added during runtime from config.conf.
+
 Run the project, and type "addnode (node-id) (server-name)" in the client.
+
 For example, to add server 4 during runtime, first remove it from config.conf, run, then type "addnode 4 server4:50058".
 
+
 To view the log:
+
 Type "log" into the client
 
 ---
