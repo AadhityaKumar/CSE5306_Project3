@@ -5,6 +5,15 @@ gRPC + Docker Compose
 GITHUB LINK: https://github.com/AadhityaKumar/CSE5306_Project3.git
 - CODE IN THE MASTER BRANCH
 
+# How to Run code
+- git clone 
+- cd CSE5306_Project3
+
+Choose a profile and run it:
+- distributed - `docker compose --profile distributed up --build` (Raft cluster + drone telemetry)
+- tpc - `docker compose --profile tpc up --build` (2PC implementation)
+- monolith - `docker compose --profile monolith up --build` (Single container version)
+  
 ---
 
 # 1. Overview
